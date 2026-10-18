@@ -1,0 +1,34 @@
+{
+  "team-agents": {
+    "alt": "Team › Agents in Pi Durable Platform for Example Corp's Support team: the team's agents with the template and version each runs, whether the team or a service manages it, its status (Awake or Hibernating) and when it was last used, with Deploy an agent.",
+    "caption": "A team's agents, deployed from templates. Agents its apps create for their users are marked as managed by a service."
+  },
+  "agent-test": {
+    "alt": "An agent's Test tab: a conversation with a support assistant in the console, the agent's reply with its model, token usage and timing, and a tool call it made through an MCP server.",
+    "caption": "Test an agent in the console before an app uses it. The conversation is kept in the agent's own storage."
+  },
+  "deploy-agent": {
+    "alt": "Deploy an agent: the team, a template from the catalog or the team's own, the agent's name and description, and the model it runs on: the template's, or another the team may use.",
+    "caption": "Deploy from the catalog or the team's own templates. The agent is pinned to the template's current version."
+  },
+  "template-versions": {
+    "alt": "A template's Versions tab: numbered versions, newest first, each with its notes, the model it runs on, the MCP servers its agents get, and whether apps may add their own servers for a thread.",
+    "caption": "Template versions don't change once made. New agents get the latest; existing agents move when someone upgrades or rolls them back."
+  },
+  "admin-models": {
+    "alt": "Admin › Models with its Providers and Models tabs: the platform's model providers and the teams' own, each with its type, access mode (proxy or direct) and owner.",
+    "caption": "Platform admins add providers and publish their models to every team or chosen ones. Keys are sealed and never shown again."
+  },
+  "team-mcp-servers": {
+    "alt": "Team › MCP servers, the Servers and Available tabs: the team's own MCP servers and the platform's servers published to the team, each with its tools.",
+    "caption": "A team's owners and admins can add MCP servers for that team alone; agents reach them only through the platform."
+  },
+  "team-usage": {
+    "alt": "Team › Usage over the last 30 days: requests, input and output tokens and estimated cost, grouped by day, model or agent.",
+    "caption": "Usage is counted for every model, proxied or not, with a cost estimate from the models' prices."
+  },
+  "oauth-consent": {
+    "alt": "The consent page: an Example Corp chat app wants to use your agents as you, from the host that publishes its client metadata, with what it will be able to do, never with admin powers, and Deny and Allow.",
+    "caption": "Apps reach a person's agents with OAuth Connect: the person allows the app once and can disconnect it under Account › Connected apps."
+  }
+}

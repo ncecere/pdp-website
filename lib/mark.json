@@ -1,0 +1,8 @@
+{
+  "_comment": "The Pi Durable Platform mark (inner SVG markup on the 64 grid), written by `npm run og` from ../pdp-assets/logo/<source>/: `svg` is mark-small.svg, the drawing for 20 to 47 px, used by components/logo.tsx (28 px, header and footer); `svgRegular` is mark.svg, the drawing for 48 px and up, used by scripts/og-image.mjs for the Open Graph card. `placeholder: true` means a neutral stand-in (an outlined square on the family's dark tile) drawn before the logo existed; `source` names the chosen logo folder once there is one. If the logo changes, run `npm run og` again and commit.",
+  "placeholder": true,
+  "source": null,
+  "viewBox": "0 0 64 64",
+  "svg": "<rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#161a22\"/><rect x=\"18.5\" y=\"18.5\" width=\"27\" height=\"27\" rx=\"4\" fill=\"none\" stroke=\"#f7f8fa\" stroke-width=\"5\"/>",
+  "svgRegular": "<rect width=\"64\" height=\"64\" rx=\"14\" fill=\"#161a22\"/><rect x=\"19\" y=\"19\" width=\"26\" height=\"26\" rx=\"4\" fill=\"none\" stroke=\"#f7f8fa\" stroke-width=\"4\"/>"
+}

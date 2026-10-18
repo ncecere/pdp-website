@@ -1,0 +1,35 @@
+{
+  "name": "pdp-website",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The landing page for Pi Durable Platform (PDP), a self-hosted console and API where a company's teams deploy, test and manage durable AI agents",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22 <23"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build && node scripts/postbuild.mjs",
+    "typecheck": "tsc --noEmit",
+    "images": "node scripts/sync-screenshots.mjs",
+    "og": "node scripts/og-image.mjs",
+    "brand": "node scripts/brand-css.mjs",
+    "docker": "docker build -t pdp-website:dev . && docker run --rm --read-only --tmpfs /tmp:uid=101,gid=101 -p 127.0.0.1:8080:8080 pdp-website:dev"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "5.3.0",
+    "next": "16.4.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "postcss": "8.5.30",
+    "sharp": "0.35.5",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2"
+  }
+}
