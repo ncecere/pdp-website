@@ -33,8 +33,8 @@ export const site = {
     platform: "ghcr.io/ncecere/pi-durable-platform",
     runtime: "ghcr.io/ncecere/pi-durable-platform-runtime",
     // "sha256:…" of each multi-arch index, from the release notes.
-    platformDigest: null as string | null,
-    runtimeDigest: null as string | null,
+    platformDigest: "sha256:15d1335db6c44d4499cef90097675320e8349a78bfc8b21b3d33e7a0588ef059" as string | null,
+    runtimeDigest: "sha256:2621a07f708fcdab089bba4384da08932d278e350fc55a985d178a498df55b35" as string | null,
     certificateIdentity: `${repoUrl}/.github/workflows/image.yml@refs/tags/${version}`,
     oidcIssuer: "https://token.actions.githubusercontent.com",
   },
