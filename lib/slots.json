@@ -8,7 +8,7 @@
     "caption": "Test an agent in the console before an app uses it. The conversation is kept in the agent's own storage."
   },
   "deploy-agent": {
-    "alt": "Deploy an agent: the team, a template from the catalog or the team's own, the agent's name and description, and the model it runs on: the template's, or another the team may use.",
+    "alt": "Deploy an agent: a template from the catalog or the team's own, the agent's name and description, and the model it runs on: the template's, or another the team may use.",
     "caption": "Deploy from the catalog or the team's own templates. The agent is pinned to the template's current version."
   },
   "template-versions": {

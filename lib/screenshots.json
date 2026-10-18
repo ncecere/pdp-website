@@ -1,1 +1,42 @@
-{}
+{
+  "team-agents": {
+    "src": "/images/team-agents.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "agent-test": {
+    "src": "/images/agent-test.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "deploy-agent": {
+    "src": "/images/deploy-agent.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "template-versions": {
+    "src": "/images/template-versions.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "admin-models": {
+    "src": "/images/admin-models.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "team-mcp-servers": {
+    "src": "/images/team-mcp-servers.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "team-usage": {
+    "src": "/images/team-usage.webp",
+    "width": 1440,
+    "height": 900
+  },
+  "oauth-consent": {
+    "src": "/images/oauth-consent.webp",
+    "width": 1440,
+    "height": 900
+  }
+}
