@@ -1,5 +1,5 @@
 const repoUrl = "https://github.com/ncecere/pi-durable-platform";
-const version = "v0.1.0";
+const version = "v0.1.1";
 // Links into the repository are pinned at the release tag, so they keep
 // showing the files of the version this page describes. Move them (with
 // `version`, `releaseDate` and the images below) when the page describes a
@@ -17,14 +17,20 @@ export const site = {
     "Pi Durable Platform (PDP) is a self-hosted, open-source console and API where a company's teams deploy, test and manage durable AI agents built with Pi's durable package, from a reviewed template catalog, with their own models and MCP servers, usage reports and audit.",
   docsUrl: "https://docs.pdp.bitop.dev",
   repoUrl,
-  // The version this page describes: the first release.
+  // The version this page describes: a fix release on top of the first
+  // release, v0.1.0.
   version,
   // The release day of `version` (the footer and the sitemap show it).
   releaseDate: "2026-10-18" as string | null,
   // The GitHub Release of `version` (made by the repository's image workflow
-  // from docs/releases/v0.1.0.md).
+  // from docs/releases/v0.1.1.md).
   releaseNotesUrl: `${repoUrl}/releases/tag/${version}`,
   releasesUrl: `${repoUrl}/releases`,
+  // The roadmap is a living document (an order of work, not a schedule), so
+  // it follows main rather than the tag; each item is an issue labelled
+  // `roadmap`, with a milestone per phase.
+  roadmapUrl: `${repoUrl}/blob/main/docs/roadmap.md`,
+  roadmapIssuesUrl: `${repoUrl}/issues?q=is%3Aissue+label%3Aroadmap`,
   // The two release images (multi-arch, signed with cosign keyless signing by
   // the repository's image workflow at the tag). The page shows them by tag
   // until the digests are filled in here after the release; then it shows
@@ -33,8 +39,8 @@ export const site = {
     platform: "ghcr.io/ncecere/pi-durable-platform",
     runtime: "ghcr.io/ncecere/pi-durable-platform-runtime",
     // "sha256:…" of each multi-arch index, from the release notes.
-    platformDigest: "sha256:15d1335db6c44d4499cef90097675320e8349a78bfc8b21b3d33e7a0588ef059" as string | null,
-    runtimeDigest: "sha256:2621a07f708fcdab089bba4384da08932d278e350fc55a985d178a498df55b35" as string | null,
+    platformDigest: "sha256:ef046ad6534aa056adf0f10b1a9e41d5e93793e17e911b8cefab750dd909b147" as string | null,
+    runtimeDigest: "sha256:a7adb0c5f7913ff2f2ffd7783301f81d23caeeceb8d68abd48838e178d9d1168" as string | null,
     certificateIdentity: `${repoUrl}/.github/workflows/image.yml@refs/tags/${version}`,
     oidcIssuer: "https://token.actions.githubusercontent.com",
   },

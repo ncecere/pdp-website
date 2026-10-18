@@ -22,7 +22,10 @@ import { imageRef, site } from "@/lib/site";
 
 /*
  * Every claim here is checked against Pi Durable Platform v0.1.0
- * (github.com/ncecere/pi-durable-platform): docs/releases/v0.1.0.md (What's
+ * (github.com/ncecere/pi-durable-platform) and again for v0.1.1, a fix
+ * release (docs/releases/v0.1.1.md: no migrations or settings; staff see any
+ * team's agents read-only and can't hibernate them; doctor checks the agents
+ * database): docs/releases/v0.1.0.md (What's
  * in it, Security model, Known limitations, Images), CHANGELOG.md, README.md, every section of DESIGN.md (Decisions, Personal workspaces,
  * OAuth Connect, Models and Team model providers, MCP servers and Team MCP
  * servers, Threads, Launchers, Verified so far, Known limits and open
@@ -31,9 +34,8 @@ import { imageRef, site } from "@/lib/site";
  * migrations/, runtime/ (src and test), internal/agenthost/launcher,
  * internal/authz, internal/serviceaccounts and the screen names in web/src
  * (router.tsx, components/layout/nav.tsx, lib/tabs.ts, pages/connect).
- * Planned work in the status card: DESIGN.md (decision 9, Personal
- * workspaces, Known limits) and the platform's answers to the chat app
- * (tool approvals, incremental streams).
+ * Planned work in the status card: docs/roadmap.md (its phases v0.2 to
+ * v0.5 and Later, each item an issue labelled `roadmap`).
  * Keep it that way: nothing on this page may describe a feature that isn't
  * built. Planned work is named as planned, in the project status card.
  */
@@ -89,7 +91,7 @@ function Hero() {
             className="inline-flex max-w-full items-center gap-2 rounded-full border border-brand-border-emphasis bg-brand-surface px-3 py-1 text-xs font-medium text-brand-muted hover:text-brand-text"
           >
             <span className="shrink-0 rounded-full bg-brand-primary-subtle px-2 py-0.5 text-brand-primary-subtle-text">{site.version}</span>
-            <span className="truncate">First release · Open source, MIT</span>
+            <span className="truncate">Fix release · Open source, MIT</span>
             <ArrowRight className="size-3.5 shrink-0" />
           </a>
           <p className="mt-6 text-base font-semibold text-brand-text">{site.name}</p>
@@ -909,25 +911,45 @@ function OpenSource() {
               <Eyebrow>Project status</Eyebrow>
             </div>
             <h3 id="status-title" className="mt-3 text-2xl font-semibold tracking-tight text-brand-text">
-              {site.version}, the first release
+              {site.version}, a fix release
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                Everything on this page is built and tested, but it is a first release, before 1.0, and hasn&apos;t run
-                in production beyond its maintainer&apos;s own installation: expect changes between releases, and read
-                the release notes before you upgrade. The durable package is experimental itself, so the runtime pins
-                one version of it and its conformance suite guards every upgrade.
+                {site.version} fixes small things in the console, has <code>doctor</code> check the agents database, and
+                lets platform staff look at any team&apos;s agents read-only, on top of the first release, v0.1.0. No
+                migrations, no new settings.
               </p>
               <p>
-                <Strong>Planned, not built yet:</Strong>
+                Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
+                beyond its maintainer&apos;s own installation: expect changes between releases, and read the release
+                notes before you upgrade. The durable package is experimental itself, so the runtime pins one version
+                of it and its conformance suite guards every upgrade.
+              </p>
+              <p>
+                <Strong>Planned, not built yet</Strong>, in the order of the{" "}
+                <TextLink href={site.roadmapUrl}>roadmap</TextLink>:
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm marker:text-brand-subtle">
-                <li>Waking a hibernating agent for scheduled work.</li>
-                <li>Files and artifacts, on object storage with a prefix per agent.</li>
-                <li>Enforcing personal workspaces&apos; monthly cost budget, which is recorded today.</li>
-                <li>Approving an agent&apos;s tool calls in the conversation, once templates have tools that need it.</li>
-                <li>Incremental event streams: today each event carries the whole conversation view.</li>
-                <li>Teams uploading agents of their own, which waits for hostile-code isolation (gVisor or Kata).</li>
+                <li>
+                  <Strong>v0.2, deploy it safely:</Strong> a Helm chart and Kustomize base with network policies, several
+                  platform replicas, metrics and tracing.
+                </li>
+                <li>
+                  <Strong>v0.3, apps at scale:</Strong> paging, incremental event streams, steering a reply, and OAuth
+                  Connect for apps with many people.
+                </li>
+                <li>
+                  <Strong>v0.4, agents that do more:</Strong> files and images on object storage, scheduled wake-ups, and
+                  approving tool calls.
+                </li>
+                <li>
+                  <Strong>v0.5, budgets and limits:</Strong> enforcing monthly cost budgets, recorded today, and limits
+                  for shared teams.
+                </li>
+                <li>
+                  <Strong>Later:</Strong> running without Kubernetes, and stronger sandboxing (gVisor or Kata) before
+                  teams upload agents of their own.
+                </li>
               </ul>
               <p>
                 <Strong>Known limits:</Strong> run one platform replica, since several haven&apos;t been tested; a
@@ -937,7 +959,9 @@ function OpenSource() {
               </p>
             </div>
             <p className="mt-6 text-brand-muted">
-              Read the <TextLink href={site.releaseNotesUrl}>{site.version} release notes</TextLink> and the{" "}
+              Read the <TextLink href={site.releaseNotesUrl}>{site.version} release notes</TextLink>, the{" "}
+              <TextLink href={site.roadmapUrl}>roadmap</TextLink> and its{" "}
+              <TextLink href={site.roadmapIssuesUrl}>issues labelled roadmap</TextLink>, and the{" "}
               <TextLink href={site.statusUrl}>known limits and open items</TextLink> in the design notes.
             </p>
           </article>

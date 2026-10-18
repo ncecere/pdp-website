@@ -1,6 +1,6 @@
 {
   "team-agents": {
-    "alt": "Team › Agents in Pi Durable Platform for Example Corp's Support team: the team's agents with the template and version each runs, whether the team or a service manages it, its status (Awake or Hibernating) and when it was last used, with Deploy an agent.",
+    "alt": "Team › Agents in Pi Durable Platform for Example Corp's Support team: the team's agents with the template each runs, whether the team or a service manages it, its status (all hibernating here) and when it was last used, with a search box and Deploy agent.",
     "caption": "A team's agents, deployed from templates. Agents its apps create for their users are marked as managed by a service."
   },
   "agent-test": {
@@ -16,11 +16,11 @@
     "caption": "Template versions don't change once made. New agents get the latest; existing agents move when someone upgrades or rolls them back."
   },
   "admin-models": {
-    "alt": "Admin › Models with its Providers and Models tabs: the platform's model providers and the teams' own, each with its type, access mode (proxy or direct) and owner.",
+    "alt": "Admin › Models, Providers tab: the platform's model providers and the Support team's own, each with its type, base URL, owner, access mode (through the platform), status and model count.",
     "caption": "Platform admins add providers and publish their models to every team or chosen ones. Keys are sealed and never shown again."
   },
   "team-mcp-servers": {
-    "alt": "Team › MCP servers, the Servers and Available tabs: the team's own MCP servers and the platform's servers published to the team, each with its tools.",
+    "alt": "Team › MCP servers, Available tab: the team's own Ticket search server first, then the platform's Calendar and Company wiki servers published to the team, each with its URL, source, tool count and status.",
     "caption": "A team's owners and admins can add MCP servers for that team alone; agents reach them only through the platform."
   },
   "team-usage": {
