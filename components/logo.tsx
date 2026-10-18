@@ -2,13 +2,13 @@ import mark from "@/lib/mark.json";
 import { site } from "@/lib/site";
 
 /*
- * The Pi Durable Platform logo. The mark is inline SVG (no request, no font)
- * kept in lib/mark.json: mark-small.svg, the drawing for 20 to 47 px, which
- * scripts/og-image.mjs also reads (mark.svg) for the Open Graph card.
- * `npm run og` writes both from ../pdp-assets/logo/<source>/. Until the logo
- * is chosen, a neutral placeholder stands in (`placeholder: true`: an
- * outlined square on the family's dark tile). The name beside it is live
- * text. pdp-docs draws the same mark at the same size. Never use Pi's logos.
+ * The Pi Durable Platform logo, "Wake". The mark is inline SVG (no request,
+ * no font) kept in lib/mark.json: mark-small.svg, the drawing for 20 to 47 px,
+ * which scripts/og-image.mjs also reads (mark.svg) for the Open Graph card.
+ * `npm run og` writes both from ../pdp-assets/logo/<source>/ (before the logo
+ * existed, a neutral placeholder stood in: `placeholder: true`). The name
+ * beside it is live text. pdp-docs draws the same mark at the same size.
+ * Never use Pi's logos.
  *
  * This is the only place the site draws the logo (header and footer).
  */

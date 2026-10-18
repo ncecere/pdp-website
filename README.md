@@ -37,10 +37,10 @@ Change the script in both repositories together. Components and `app/globals.css
 
 ## Logo, favicon and Open Graph card
 
-The logo is not chosen yet; it is being designed in `../pdp-assets/logo/`. Until then the site uses a neutral **placeholder** mark (an outlined square on the family's dark tile; `placeholder: true` in `lib/mark.json`).
+The logo is "Wake": a 3 x 3 grid of dots on the family's dark tile, the one in the middle larger and fuchsia. Its source, exports and usage rules live in `../pdp-assets/logo/` (the mark is in the folder named by `source` in `lib/mark.json`; currently `wake`).
 
 - `components/logo.tsx` is the only place the site draws the logo (header and footer): the mark as inline SVG (`mark-small.svg`, 28 px, `aria-hidden`) beside the name as live text. pdp-docs should draw it identically; change both together.
-- `lib/mark.json` holds the mark as inner SVG markup on its 64 grid: `svg` is `mark-small.svg` (read by `components/logo.tsx`), `svgRegular` is `mark.svg` (read by `scripts/og-image.mjs`), `source` names the chosen logo folder (null for now).
+- `lib/mark.json` holds the mark as inner SVG markup on its 64 grid: `svg` is `mark-small.svg` (read by `components/logo.tsx`), `svgRegular` is `mark.svg` (read by `scripts/og-image.mjs`), `source` names the logo folder. `npm run og` writes all three from that folder; `placeholder: true` marks the neutral stand-in (an outlined square on the family's dark tile) the site used before the logo existed.
 - `npm run og` (`scripts/og-image.mjs`) finds the logo folder (`LOGO_DIR`; else `../pdp-assets/logo/<source>`; else the only folder under `../pdp-assets/logo/` with every export: `mark.svg`, `mark-small.svg`, `favicon.ico`, `favicon.svg`, `png/apple-touch-icon.png`, `png/icon-192.png`, `png/icon-512.png`; concept folders such as `family/` are ignored), copies the five icons unchanged into `public/`, refreshes `lib/mark.json` (`placeholder: false`, `source`), and draws `public/og.png` (1200x630: the mark and name, the headline and, once that slot is filled, the `team-agents` screenshot) in the brand's dark colours. Without a logo folder it draws the icons (including a PNG-in-ICO `favicon.ico`) from the placeholder mark. Rerun it when the logo or the screenshot changes and commit the results.
 
 ## Screenshots
