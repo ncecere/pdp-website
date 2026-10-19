@@ -1,5 +1,5 @@
 const repoUrl = "https://github.com/ncecere/pi-durable-platform";
-const version = "v0.1.1";
+const version = "v0.1.2";
 // Links into the repository are pinned at the release tag, so they keep
 // showing the files of the version this page describes. Move them (with
 // `version`, `releaseDate` and the images below) when the page describes a
@@ -17,13 +17,13 @@ export const site = {
     "Pi Durable Platform (PDP) is a self-hosted, open-source console and API where a company's teams deploy, test and manage durable AI agents built with Pi's durable package, from a reviewed template catalog, with their own models and MCP servers, usage reports and audit.",
   docsUrl: "https://docs.pdp.bitop.dev",
   repoUrl,
-  // The version this page describes: a fix release on top of the first
-  // release, v0.1.0.
+  // The version this page describes: a fix release on top of v0.1.1 and
+  // the first release, v0.1.0.
   version,
   // The release day of `version` (the footer and the sitemap show it).
-  releaseDate: "2026-10-18" as string | null,
+  releaseDate: "2026-10-19" as string | null,
   // The GitHub Release of `version` (made by the repository's image workflow
-  // from docs/releases/v0.1.1.md).
+  // from docs/releases/v0.1.2.md).
   releaseNotesUrl: `${repoUrl}/releases/tag/${version}`,
   releasesUrl: `${repoUrl}/releases`,
   // The roadmap is a living document (an order of work, not a schedule), so
@@ -39,8 +39,8 @@ export const site = {
     platform: "ghcr.io/ncecere/pi-durable-platform",
     runtime: "ghcr.io/ncecere/pi-durable-platform-runtime",
     // "sha256:…" of each multi-arch index, from the release notes.
-    platformDigest: "sha256:ef046ad6534aa056adf0f10b1a9e41d5e93793e17e911b8cefab750dd909b147" as string | null,
-    runtimeDigest: "sha256:a7adb0c5f7913ff2f2ffd7783301f81d23caeeceb8d68abd48838e178d9d1168" as string | null,
+    platformDigest: "sha256:c20916ab720cc5353e17d8ad5d7c12a50fd637b9cbedc1e453f1a99ca6db6deb" as string | null,
+    runtimeDigest: "sha256:7b61a2af7b1c4aafec78ec0c5af4e9ae8e6978c1bfd375d9fea9f0b52e32c983" as string | null,
     certificateIdentity: `${repoUrl}/.github/workflows/image.yml@refs/tags/${version}`,
     oidcIssuer: "https://token.actions.githubusercontent.com",
   },

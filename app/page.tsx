@@ -22,10 +22,12 @@ import { imageRef, site } from "@/lib/site";
 
 /*
  * Every claim here is checked against Pi Durable Platform v0.1.0
- * (github.com/ncecere/pi-durable-platform) and again for v0.1.1, a fix
- * release (docs/releases/v0.1.1.md: no migrations or settings; staff see any
- * team's agents read-only and can't hibernate them; doctor checks the agents
- * database): docs/releases/v0.1.0.md (What's
+ * (github.com/ncecere/pi-durable-platform) and again for v0.1.1 and v0.1.2,
+ * fix releases (docs/releases/v0.1.1.md: no migrations or settings; staff see
+ * any team's agents read-only and can't hibernate them; doctor checks the
+ * agents database. docs/releases/v0.1.2.md: the platform serves a connecting
+ * app's logo, the agent page's badge follows wake and hibernate):
+ * docs/releases/v0.1.0.md (What's
  * in it, Security model, Known limitations, Images), CHANGELOG.md, README.md, every section of DESIGN.md (Decisions, Personal workspaces,
  * OAuth Connect, Models and Team model providers, MCP servers and Team MCP
  * servers, Threads, Launchers, Verified so far, Known limits and open
@@ -915,9 +917,10 @@ function OpenSource() {
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                {site.version} fixes small things in the console, has <code>doctor</code> check the agents database, and
-                lets platform staff look at any team&apos;s agents read-only, on top of the first release, v0.1.0. No
-                migrations, no new settings.
+                {site.version} shows a connecting app&apos;s logo (the platform fetches, checks and serves it) and
+                makes the agent page&apos;s badge follow wake and hibernate. v0.1.1 before it had <code>doctor</code>{" "}
+                check the agents database and let platform staff look at any team&apos;s agents read-only, on top of
+                the first release, v0.1.0. No migrations, no new settings.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production

@@ -78,7 +78,7 @@ export function SiteFooter() {
             {site.releaseDate ? (
               <>
                 {" "}
-                (<time dateTime={site.releaseDate}>{releaseDay}</time>), a fix release on top of v0.1.0
+                (<time dateTime={site.releaseDate}>{releaseDay}</time>), a fix release on top of v0.1.1
               </>
             ) : (
               "."
