@@ -43,10 +43,14 @@ import { imageRef, site } from "@/lib/site";
  * internal/doctor), .env.example (the complete configuration reference),
  * DESIGN.md "Threads" (platform-chosen thread IDs, thread MCP servers),
  * "Sign-in and group membership" (re-checking groups) and "Agent storage and
- * ownership" (the ownership record and prune-roles). Several replicas and
- * metrics are not built yet and stay planned.
- * Planned work in the status card: docs/roadmap.md (its phases v0.2 to
- * v0.5 and Later, each item an issue labelled `roadmap`).
+ * ownership" (the ownership record and prune-roles), "Several replicas"
+ * (and docs/replicas.md, deploy/README.md "Replicas": two replicas, the
+ * runtime's openStreams, one reaper at a time, a lock per agent start),
+ * "Observability" (metrics, labels, OTLP/HTTP traces; deploy/README.md
+ * "Monitoring", deploy/grafana/), and the chart's values (internal/config,
+ * deploy/helm/pi-durable-platform).
+ * Planned work in the status card: docs/roadmap.md (revised 2026-10-19: its
+ * phases v0.2 to v0.6 and Later, each item an issue labelled `roadmap`).
  * Keep it that way: nothing on this page may describe a feature that isn't
  * built. Planned work is named as planned, in the project status card.
  */
@@ -411,6 +415,11 @@ function Features() {
                 <Strong>Hibernates when idle</Strong> (after 10 minutes by default; no pod, no connection), and wakes
                 on the next request.
               </>,
+              <>
+                <Strong>Several platform replicas:</Strong> two replicas behind one Service keep the platform up
+                through node drains and rollouts. An agent&apos;s own runtime says whether it is idle, so no replica
+                hibernates an agent that another is using, and starting an agent is serialised by a database lock.
+              </>,
             ]}
             note={
               <>
@@ -574,6 +583,12 @@ function Features() {
               <>
                 <Strong>Rate limits</Strong> counted in PostgreSQL; keys and tokens stored only as peppered
                 digests; secrets sealed with AES-256-GCM; the key pepper and the encryption key can be rotated, and a <code>rekey</code> command re-seals every stored secret under the new encryption key.
+              </>,
+              <>
+                <Strong>Metrics and traces:</Strong> Prometheus metrics on a port of its own (agent wakes, running
+                agents, proxy traffic, errors, sign-ins, database pools), a Grafana dashboard and example alerts, and
+                optional OpenTelemetry traces. Metric labels never name a person, team, agent or conversation, and
+                traces carry no message content or credentials.
               </>,
             ]}
           />
@@ -887,7 +902,8 @@ function SelfHost() {
               The chart&apos;s NetworkPolicies deny everything in the agents namespace: an agent takes traffic from the
               platform only, and reaches only its database, the platform&apos;s gateway and DNS. They need a network
               plugin that enforces NetworkPolicy, and the repository&apos;s smoke test installs the chart into a kind
-              cluster and checks that agents really are isolated. The platform runs as one replica. Every setting is
+              cluster and checks that agents really are isolated. The platform runs as one replica or as two, and its
+              metrics port (no authentication) can be reached only by the scraper you name. Every setting is
               listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>, and the launchers are in the{" "}
               <TextLink href={site.launchersUrl}>design notes</TextLink>.
             </Note>
@@ -972,12 +988,13 @@ function OpenSource() {
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                v0.2 adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, a{" "}
+                v0.2 adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, several
+                platform replicas, Prometheus metrics with a Grafana dashboard and OpenTelemetry traces, a{" "}
                 <code>rekey</code> command to rotate the encryption key, a complete configuration reference, thread IDs
-                the platform chooses, re-checking identity provider groups while people are signed in, and a hardened
-                agents database (each agent&apos;s owner is recorded in its own schema, and orphaned roles can be
-                dropped). It builds on v0.1.2 and adds one database migration, with new settings listed in{" "}
-                <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
+                the platform chooses, re-checking identity provider groups while people are signed in (the provider
+                must issue refresh tokens), and a hardened agents database (each agent&apos;s owner is recorded in its
+                own schema, and orphaned roles can be dropped). It builds on v0.1.2 and adds one database migration,
+                with new settings listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
@@ -991,19 +1008,22 @@ function OpenSource() {
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm marker:text-brand-subtle">
                 <li>
-                  <Strong>Still to come in v0.2:</Strong> several platform replicas, metrics and tracing.
-                </li>
-                <li>
                   <Strong>v0.3, apps at scale:</Strong> paging, incremental event streams, steering a reply, and OAuth
                   Connect for apps with many people.
                 </li>
                 <li>
-                  <Strong>v0.4, agents that do more:</Strong> files and images on object storage, scheduled wake-ups, and
-                  approving tool calls.
+                  <Strong>v0.4, agents that run on their own:</Strong> the runtime as a library, so teams can build
+                  agents with their own state, hooks and tasks; schedules and webhooks that wake agents; hibernation
+                  that knows about background work; a triage agent and a deep-research agent; and approving tool
+                  calls.
                 </li>
                 <li>
-                  <Strong>v0.5, budgets and limits:</Strong> enforcing monthly cost budgets, recorded today, and limits
-                  for shared teams.
+                  <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, an assistant
+                  with memory, enforcing monthly cost budgets (recorded today), limits for shared teams, and agent
+                  runtimes that platform admins register.
+                </li>
+                <li>
+                  <Strong>v0.6, coding agents:</Strong> workspaces with files and a shell.
                 </li>
                 <li>
                   <Strong>Later:</Strong> running without Kubernetes, and stronger sandboxing (gVisor or Kata) before
@@ -1011,8 +1031,9 @@ function OpenSource() {
                 </li>
               </ul>
               <p>
-                <Strong>Known limits:</Strong> run one platform replica, since several haven&apos;t been tested; a
-                schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
+                <Strong>Known limits:</Strong> several replicas need the Kubernetes or Agent Sandbox launcher, since the
+                local one is a single process; traces stop at the platform, because the agent&apos;s runtime doesn&apos;t
+                continue them yet; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
                 connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; and an
                 app that chooses its own thread IDs should make them random, or ask the platform for them.
               </p>
