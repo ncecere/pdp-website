@@ -36,6 +36,15 @@ import { imageRef, site } from "@/lib/site";
  * migrations/, runtime/ (src and test), internal/agenthost/launcher,
  * internal/authz, internal/serviceaccounts and the screen names in web/src
  * (router.tsx, components/layout/nav.tsx, lib/tabs.ts, pages/connect).
+ * The v0.2 branch adds what v0.2 built (the product's `main`): deploy/README.md,
+ * deploy/helm/pi-durable-platform/README.md and deploy/kustomize/README.md
+ * (the Helm chart, Kustomize base and overlays, RBAC, NetworkPolicies, the
+ * kind smoke test, the signed chart), `rekey` and `doctor` (internal/rekey,
+ * internal/doctor), .env.example (the complete configuration reference),
+ * DESIGN.md "Threads" (platform-chosen thread IDs, thread MCP servers),
+ * "Sign-in and group membership" (re-checking groups) and "Agent storage and
+ * ownership" (the ownership record and prune-roles). Several replicas and
+ * metrics are not built yet and stay planned.
  * Planned work in the status card: docs/roadmap.md (its phases v0.2 to
  * v0.5 and Later, each item an issue labelled `roadmap`).
  * Keep it that way: nothing on this page may describe a feature that isn't
@@ -390,8 +399,9 @@ function Features() {
                 requests, and finishes a reply that was cut off.
               </>,
               <>
-                <Strong>One owner at a time:</Strong> a runtime holds a lock on the agent&apos;s only database
-                connection, so a stale runtime can&apos;t write once it loses it.
+                <Strong>One owner at a time:</Strong> the owner is recorded in the agent&apos;s own schema, tied to its
+                runtime&apos;s only database connection, so a stale runtime can&apos;t write once it loses it, and no
+                other agent&apos;s role can block or take it.
               </>,
               <>
                 <Strong>Isolated:</Strong> an agent&apos;s role can&apos;t read another agent&apos;s schema, and a runtime
@@ -420,7 +430,8 @@ function Features() {
             lead={
               <p>
                 Ownership, data and cost follow the team. People sign in with your identity provider over OpenID
-                Connect, optionally limited to some email domains or groups.
+                Connect, optionally limited to some email domains or groups, which the platform keeps re-checking while
+                people are signed in.
               </p>
             }
             bullets={[
@@ -435,6 +446,11 @@ function Features() {
               <>
                 <Strong>Service-managed agents:</Strong> an app creates one per user by key. Only the team&apos;s service
                 accounts talk to them; owners and admins see and delete them, never read them.
+              </>,
+              <>
+                <Strong>Groups are re-checked:</Strong> remove someone from the allowed group and, within a check
+                interval, their sessions end, their connected apps are disconnected and their API keys stop working.
+                Admins see <Strong>Group access ended</Strong> on their page.
               </>,
               <>
                 <Strong>Personal workspaces:</Strong> where platform admins turn them on, everyone gets one, deploying
@@ -509,8 +525,8 @@ function Features() {
             title="Private or shared conversations, with authors"
             lead={
               <p>
-                A conversation is a thread. Its first message makes it shared, seen by everyone who may use the agent,
-                or private to the person or service account that started it.
+                A conversation is a thread. Starting it makes it shared, seen by everyone who may use the agent, or
+                private to the person or service account that started it.
               </p>
             }
             bullets={[
@@ -525,6 +541,10 @@ function Features() {
               <>
                 <Strong>Reasoned reads only:</Strong> platform admins can open a conversation by stating a reason; the
                 read is in the team&apos;s audit log, where its owners see it.
+              </>,
+              <>
+                <Strong>IDs nobody can guess:</Strong> an app asks the platform to start a thread and gets a random ID,
+                and an app&apos;s own MCP servers attach only to a thread whose creator is known.
               </>,
               <>Listing threads doesn&apos;t wake the agent; one event stream covers every agent a caller may use.</>,
             ]}
@@ -553,7 +573,7 @@ function Features() {
               </>,
               <>
                 <Strong>Rate limits</Strong> counted in PostgreSQL; keys and tokens stored only as peppered
-                digests; secrets sealed with AES-256-GCM; the encryption key and the key pepper can be rotated, with the previous one still accepted.
+                digests; secrets sealed with AES-256-GCM; the key pepper and the encryption key can be rotated, and a <code>rekey</code> command re-seals every stored secret under the new encryption key.
               </>,
             ]}
           />
@@ -711,6 +731,24 @@ make deps-up                   # PostgreSQL 17, local only
 make web                       # build the web UI
 make run                       # http://localhost:8098`;
 
+// deploy/helm/pi-durable-platform/README.md (Install) and
+// .github/workflows/chart.yml: the chart is published to ghcr.io/ncecere/charts
+// and signed with cosign (keyless) at the release tag.
+const digestOrPlaceholder = (d: string | null) => d ?? "sha256:<digest from the release notes>";
+const helmInstall = `# values.yaml: appUrl, oidc, ingress and networkPolicy (your API server's
+# address and your PostgreSQL pods). Secrets are created beforehand.
+helm install pi-durable-platform ${site.chart.oci} \
+  --version ${site.chart.version} -n pi-durable-platform -f values.yaml \
+  --set images.platform.digest=${digestOrPlaceholder(site.images.platformDigest)} \
+  --set images.runtime.digest=${digestOrPlaceholder(site.images.runtimeDigest)}
+
+# Verify the chart's signature (cosign v3.0 or newer; keyless)
+cosign verify ${site.chart.image}:${site.chart.version} \
+  --certificate-identity \
+    ${site.chart.certificateIdentity} \
+  --certificate-oidc-issuer \
+    ${site.images.oidcIssuer}`;
+
 // .env.example and DESIGN.md "Launchers"; internal/config/validate.go.
 const warmPool = `AGENTS_LAUNCHER=agent-sandbox
 AGENTS_SANDBOX_WARM_POOL=agent-runtimes     # your SandboxWarmPool
@@ -744,7 +782,7 @@ const launchers: { name: string; runtime: string; idle: string }[] = [
 const requirements = [
   "PostgreSQL 17: one database for the platform, and one for agents' state, reached by a role that may create roles",
   "An OpenID Connect identity provider for sign-in",
-  "Kubernetes for agent runtimes, with Agent Sandbox for the sandbox and warm-pool launchers",
+  "Kubernetes 1.27 or newer for agent runtimes, with a network plugin that enforces NetworkPolicy, and Helm 3 or 4 for the chart. Agent Sandbox for the sandbox and warm-pool launchers",
   "TLS in front of the platform, on the host in APP_URL",
   "Two 32-byte secrets, ENCRYPTION_KEY and API_KEY_PEPPER, kept with your backups",
 ];
@@ -757,7 +795,8 @@ function SelfHost() {
           <p>
             {site.name} is one Go binary with the web UI built in, in a distroless image that runs as non-root with a
             read-only root filesystem. Agents run the runtime image, one per active agent, started by the launcher you
-            choose.
+            choose. On Kubernetes you install it with a signed <Strong>Helm chart</Strong>, or with Kustomize resources
+            generated from it.
           </p>
           <p>
             With <TextLink href={site.agentSandboxUrl}>Agent Sandbox</TextLink>&apos;s warm pool, standby runtimes are
@@ -767,6 +806,14 @@ function SelfHost() {
         </SectionHeading>
         <div className="mt-12 grid gap-8 lg:grid-cols-[1.2fr_1fr]">
           <div className="min-w-0 space-y-6">
+            <CodeBlock label="Install on Kubernetes with the Helm chart">{helmInstall}</CodeBlock>
+            <p className="text-sm text-brand-muted">
+              The chart deploys the platform, the namespace agents run in, the platform&apos;s permissions there (a
+              Role in that namespace only, nothing cluster-wide) and the NetworkPolicies that isolate agents. The{" "}
+              <TextLink href={site.kustomizeDocsUrl}>Kustomize</TextLink> base and its overlays for each launcher have
+              the same objects, and a check keeps the two in step. It doesn&apos;t install PostgreSQL, your ingress
+              controller or Agent Sandbox.
+            </p>
             <CodeBlock label="Try Pi Durable Platform on your machine">{quickStart}</CodeBlock>
             <ol className="list-decimal space-y-3 pl-5 text-brand-muted marker:text-brand-subtle">
               <li>
@@ -789,6 +836,10 @@ function SelfHost() {
               deployment.
             </p>
             <CodeBlock label="Agent Sandbox with a warm pool (excerpt of the platform's settings)">{warmPool}</CodeBlock>
+            <p className="text-sm text-brand-muted">
+              With the chart, set <code>agents.launcher: agent-sandbox</code>: it creates the warm pool (its size is{" "}
+              <code>agentSandbox.warmPool.size</code>) and the activation Secret is kept by the platform.
+            </p>
             <div className="min-w-0 overflow-x-auto rounded-card border border-brand-border-emphasis bg-brand-surface">
               <table className="w-full text-left text-sm">
                 <caption className="border-b border-brand-border px-4 py-2 text-left text-xs font-medium text-brand-muted">
@@ -829,23 +880,27 @@ function SelfHost() {
             <p className="mt-2 text-sm text-brand-muted">
               Agent pods get no service account token, a restricted security context and a read-only root filesystem,
               and can use a sandboxing RuntimeClass such as gVisor. Secrets reach them through a Secret per agent, never
-              the pod spec. The platform needs to manage pods and Secrets (or sandboxes and claims) in the agents&apos;
+              the pod spec. The platform manages pods and Secrets (or sandboxes and claims) in the agents&apos;
               namespace only; <code>/healthz</code> and <code>/readyz</code> serve the probes.
             </p>
             <Note>
-              The repository doesn&apos;t ship Kubernetes manifests, NetworkPolicies or a Helm chart yet. Write
-              NetworkPolicies so agent pods take traffic from the platform only and reach only its gateway, their
-              database and the providers you allow. The settings are described in{" "}
-              <TextLink href={site.envExampleUrl}>.env.example</TextLink> and the launchers in the{" "}
+              The chart&apos;s NetworkPolicies deny everything in the agents namespace: an agent takes traffic from the
+              platform only, and reaches only its database, the platform&apos;s gateway and DNS. They need a network
+              plugin that enforces NetworkPolicy, and the repository&apos;s smoke test installs the chart into a kind
+              cluster and checks that agents really are isolated. The platform runs as one replica. Every setting is
+              listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>, and the launchers are in the{" "}
               <TextLink href={site.launchersUrl}>design notes</TextLink>.
             </Note>
             <div className="mt-6 flex flex-wrap gap-3">
-              <ButtonLink href={site.docsUrl}>
-                Self-hosting docs
+              <ButtonLink href={site.installDocsUrl}>
+                Install on Kubernetes
                 <ArrowRight className="size-4" />
               </ButtonLink>
-              <ButtonLink href={site.readmeUrl} variant="secondary">
-                README on GitHub
+              <ButtonLink href={site.docsUrl} variant="secondary">
+                Self-hosting docs
+              </ButtonLink>
+              <ButtonLink href={site.deployUrl} variant="secondary">
+                Chart and manifests on GitHub
               </ButtonLink>
             </div>
           </div>
@@ -913,14 +968,16 @@ function OpenSource() {
               <Eyebrow>Project status</Eyebrow>
             </div>
             <h3 id="status-title" className="mt-3 text-2xl font-semibold tracking-tight text-brand-text">
-              {site.version}, a fix release
+              v0.2, run it anywhere, safely
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                {site.version} shows a connecting app&apos;s logo (the platform fetches, checks and serves it) and
-                makes the agent page&apos;s badge follow wake and hibernate. v0.1.1 before it had <code>doctor</code>{" "}
-                check the agents database and let platform staff look at any team&apos;s agents read-only, on top of
-                the first release, v0.1.0. No migrations, no new settings.
+                v0.2 adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, a{" "}
+                <code>rekey</code> command to rotate the encryption key, a complete configuration reference, thread IDs
+                the platform chooses, re-checking identity provider groups while people are signed in, and a hardened
+                agents database (each agent&apos;s owner is recorded in its own schema, and orphaned roles can be
+                dropped). It builds on v0.1.2 and adds one database migration, with new settings listed in{" "}
+                <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
@@ -934,8 +991,7 @@ function OpenSource() {
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm marker:text-brand-subtle">
                 <li>
-                  <Strong>v0.2, deploy it safely:</Strong> a Helm chart and Kustomize base with network policies, several
-                  platform replicas, metrics and tracing.
+                  <Strong>Still to come in v0.2:</Strong> several platform replicas, metrics and tracing.
                 </li>
                 <li>
                   <Strong>v0.3, apps at scale:</Strong> paging, incremental event streams, steering a reply, and OAuth
@@ -956,9 +1012,9 @@ function OpenSource() {
               </ul>
               <p>
                 <Strong>Known limits:</Strong> run one platform replica, since several haven&apos;t been tested; a
-                schema per agent suits thousands of agents, not millions; any role in
-                the agents database can take another agent&apos;s lock, which is acceptable for templates the platform
-                runs, not for uploaded code; and thread IDs are chosen by apps, which should make them random.
+                schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
+                connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; and an
+                app that chooses its own thread IDs should make them random, or ask the platform for them.
               </p>
             </div>
             <p className="mt-6 text-brand-muted">
