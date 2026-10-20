@@ -11,6 +11,7 @@ import {
   LogIn,
   MessageSquare,
   Moon,
+  Network,
   Plug,
   Server,
   Shield,
@@ -59,10 +60,19 @@ import { imageRef, site } from "@/lib/site";
  * Usage" (several agents, agent by day), "MCP servers" (app-only tools),
  * api/openapi.yaml and web/src (test-chat.tsx, move-agent.tsx,
  * app-secrets-section.tsx, admin/usage/app-filter.tsx, team/usage).
+ * v0.4.0 ("Agents that run on their own", 2026-10-20) is checked against
+ * the product's design notes at the merge of feat/v04-firstparty and
+ * fix/v04-security: docs/custom-agents.md (the library, custom state for
+ * apps, the upgrade check), docs/runtime-contract.md, docs/triggers.md
+ * (schedules, signed webhooks, runs, limits, callbacks, agent-made
+ * schedules), docs/hibernation.md, docs/approvals.md, docs/mcp-identity.md,
+ * docs/first-party-agents.md, examples/custom-agent/, .env.example
+ * (AGENTS_BACKGROUND_MAX, TRIGGERS_*), migrations 00021 to 00026,
+ * api/openapi.yaml and web/src (triggers-tab.tsx, runs-tab.tsx,
+ * approvals-tab.tsx, kind-fields.tsx, approval-fields.tsx, the MCP server's
+ * Identity settings).
  * Planned work in the status card: docs/roadmap.md (revised 2026-10-20: its
- * phases v0.4 to v0.6 and Later, each item an issue labelled `roadmap`; v0.4
- * gained the person behind an MCP call, #57, and v0.5 MCP Apps, #51, and
- * memory as an MCP server, #36).
+ * phases v0.5, v0.6 and Later, each item an issue labelled `roadmap`).
  * Keep it that way: nothing on this page may describe a feature that isn't
  * built. Planned work is named as planned, in the project status card.
  */
@@ -377,8 +387,9 @@ function Features() {
             title="Templates are what you govern"
             lead={
               <p>
-                Every agent comes from a template: its instructions, the model it runs on and the MCP tools it gets.
-                Teams don&apos;t upload code; agents run the platform&apos;s own runtime.
+                Every agent comes from a template: its instructions, the model it runs on, the MCP tools it gets, and
+                which of them ask a person first. Teams don&apos;t upload code; agents run the runtime the operator
+                deploys.
               </p>
             }
             bullets={[
@@ -393,6 +404,16 @@ function Features() {
               <>
                 <Strong>Team templates</Strong> stay private to the team until it asks to publish them, and may use the
                 team&apos;s own models and MCP servers, which keeps them out of the catalog.
+              </>,
+              <>
+                <Strong>A kind for each version:</Strong> the assistant, a <Strong>triage</Strong> agent that keeps a
+                queue of a tracker&apos;s new items, drafts replies and asks before it writes, or a{" "}
+                <Strong>deep researcher</Strong> that plans, runs subagents in parallel, keeps its sources and answers
+                with a report.
+              </>,
+              <>
+                <Strong>Ask first:</Strong> a version lists tools that wait for a person&apos;s approval. The call
+                waits through restarts and hibernation; a denied call is refused and the agent is told why.
               </>,
             ]}
           />
@@ -425,7 +446,8 @@ function Features() {
               </>,
               <>
                 <Strong>Hibernates when idle</Strong> (after 10 minutes by default; no pod, no connection), and wakes
-                on the next request.
+                on the next request. Background work, such as a background subagent, keeps it awake up to a ceiling;
+                waiting for a person&apos;s approval doesn&apos;t. Its page says what keeps it awake.
               </>,
               <>
                 <Strong>Several platform replicas:</Strong> two replicas behind one Service keep the platform up
@@ -542,9 +564,11 @@ function Features() {
                 MCP servers its user enabled, on hosts the operator allows. The platform keeps their headers.
               </>,
               <>
-                Tools an MCP App keeps for its own interface are never offered to the model. Tool lists stored before
-                v0.3 are read again when the platform starts.
+                <Strong>Who a call is for:</Strong> through the gateway, each request carries a short-lived token the
+                platform signs, naming the agent, its team and, in a personal workspace or a private thread, the
+                person. Servers verify it with the platform&apos;s published keys; the agent can&apos;t change it.
               </>,
+              <>Tools an MCP App keeps for its own interface are never offered to the model.</>,
             ]}
           />
 
@@ -589,6 +613,78 @@ function Features() {
               </>,
               <>Listing threads doesn&apos;t wake the agent; one event stream covers every agent a caller may use.</>,
             ]}
+          />
+
+          {/* docs/triggers.md; docs/approvals.md; web/src triggers-tab.tsx, runs-tab.tsx */}
+          <FeatureCard
+            id="feature-triggers"
+            icon={<Network className="size-5" />}
+            eyebrow="Triggers"
+            title="Agents that run on their own"
+            lead={
+              <p>
+                Schedules and webhooks start work without a person. Each fire wakes the agent and sends it a message as
+                the trigger, never as someone, with the team&apos;s models and MCP servers.
+              </p>
+            }
+            bullets={[
+              <>
+                <Strong>Schedules</Strong> in cron with a time zone, and <Strong>webhooks</Strong> your systems sign
+                with a secret: an unsigned, altered or replayed delivery starts nothing.
+              </>,
+              <>
+                <Strong>Runs</Strong> with their status and cost, in the console and the API, and a signed callback
+                to your system when each one ends.
+              </>,
+              <>
+                <Strong>Limits that hold:</Strong> runs at once, a maximum run time, daily budgets per trigger and per
+                agent, pauses, and back-off that pauses a failing trigger.
+              </>,
+              <>
+                <Strong>Reminders the agent sets itself,</Strong> where its template allows: listed with the
+                agent&apos;s triggers, within the same limits, and never from someone&apos;s private conversation.
+              </>,
+              <>Only a team&apos;s owners and admins, in the console, create triggers: they spend with nobody present.</>,
+            ]}
+          />
+
+          {/* docs/custom-agents.md; docs/runtime-contract.md; examples/custom-agent */}
+          <FeatureCard
+            id="feature-custom-agents"
+            icon={<Layers className="size-5" />}
+            eyebrow="Custom agents"
+            title="The runtime is a library"
+            lead={
+              <p>
+                The agent runtime is also a TypeScript library, and the platform&apos;s own assistant is its default
+                composition. Build an agent with its own tools, state and guards, on the same storage, hibernation and
+                access rules.
+              </p>
+            }
+            bullets={[
+              <>
+                <Strong>Tools, documents and hooks</Strong> through a stable facade over the durable package; guards run
+                on every turn of every thread.
+              </>,
+              <>
+                <Strong>A test kit:</Strong> a scripted model, in-memory storage, crash-and-restart tests that check no
+                tool call is repeated or lost, and the runtime contract as a conformance suite.
+              </>,
+              <>
+                <Strong>State for apps:</Strong> tool details and documents an agent exposes, read through the platform
+                with the thread&apos;s access rules, and an event when one changes.
+              </>,
+              <>
+                <Strong>Upgrades are checked:</Strong> the platform refuses to start an agent on a runtime older than the
+                one that last wrote its data, and says why.
+              </>,
+            ]}
+            note={
+              <>
+                A custom agent goes into the runtime image the operator deploys, for the whole installation. Teams
+                don&apos;t upload code; choosing a runtime per template is on the roadmap.
+              </>
+            }
           />
 
           {/* DESIGN.md "Models › Usage"; api/openapi.yaml (UsageReport, audit routes); web/src admin audit CSV export */}
@@ -663,7 +759,8 @@ function ForApps() {
             platform API.
             It is described in OpenAPI; replies stream as server-sent events, whole views or only the changes. A{" "}
             <code>requestId</code> makes a retried message safe, and an <code>Idempotency-Key</code> a retried agent
-            creation.
+            creation. Your systems can also start an agent&apos;s work with a signed webhook, and read the state an
+            agent exposes, such as a triage queue or a research plan.
           </p>
         </SectionHeading>
         <div className="mt-12 grid items-start gap-8 lg:grid-cols-2">
@@ -1035,22 +1132,22 @@ function OpenSource() {
               <Eyebrow>Project status</Eyebrow>
             </div>
             <h3 id="status-title" className="mt-3 text-2xl font-semibold tracking-tight text-brand-text">
-              {site.version}, apps at scale
+              {site.version}, agents that run on their own
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                {site.version} is for apps built on the platform: paging and title search for threads and
-                conversations, event streams that send only what changed, steering a reply, safe retries when creating
-                agents and agents by key in personal workspaces, moving an agent with its conversations to another
-                team, OAuth Connect for apps with many people (silent reconnects, the expected account, a read-only
-                scope, and one event stream and usage report for a trusted app), and usage for several agents at once.
-                It builds on v0.2.0, adds three database migrations and no new settings. It also fixes what an
-                independent review of the release found.
+                {site.version} lets agents work without a person: schedules and signed webhooks that start runs, with
+                limits, budgets and a signed callback when each run ends, and reminders an agent sets itself. A person
+                can approve sensitive tool calls before they run, MCP servers learn which person a call is for from a
+                token the platform signs, and hibernation knows about background work. The runtime is now a library
+                with a test kit, so operators can build agents with their own tools, state and guards, and two agents
+                built with it ship as template kinds: triage and a deep researcher. It builds on v0.3.0 and adds six
+                database migrations and settings for background work and triggers.
               </p>
               <p>
-                v0.2.0, the release before, brought the Helm chart and Kustomize base, several platform replicas,
-                metrics and traces, the <code>rekey</code> command and group re-checks; its settings are in{" "}
-                <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
+                v0.3.0, the release before, was for apps at scale: paging and search, event streams that send only
+                what changed, steering, safe retries, moving agents and OAuth Connect for apps with many people. Every
+                setting is in <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
@@ -1064,19 +1161,15 @@ function OpenSource() {
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm marker:text-brand-subtle">
                 <li>
-                  <Strong>v0.4, agents that run on their own:</Strong> the runtime as a library, so teams can build
-                  agents with their own state, hooks and tasks; schedules and webhooks that wake agents; hibernation
-                  that knows about background work; a triage agent and a deep-research agent; telling MCP servers, with
-                  a signed identity, the person behind a tool call; and approving tool calls.
-                </li>
-                <li>
-                  <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, memory for
-                  assistants (an MCP server that remembers for each person), enforcing monthly cost budgets (recorded today), limits for shared teams, showing MCP
+                  <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, runtime
+                  resources per template version, enforcing monthly cost budgets (recorded today), limits for shared
+                  teams, memory for assistants (an MCP server that remembers for each person), showing MCP
                   servers&apos; app interfaces in the console and in apps, and agent runtimes that platform admins
-                  register.
+                  register and template versions choose.
                 </li>
                 <li>
-                  <Strong>v0.6, coding agents:</Strong> workspaces with files and a shell.
+                  <Strong>v0.6, coding agents:</Strong> workspaces with files and a shell, kept apart from the
+                  agent&apos;s credentials.
                 </li>
                 <li>
                   <Strong>Later:</Strong> running without Kubernetes, and stronger sandboxing (gVisor or Kata) before
@@ -1084,15 +1177,18 @@ function OpenSource() {
                 </li>
               </ul>
               <p>
-                <Strong>Known limits:</Strong> several replicas need the Kubernetes or Agent Sandbox launcher, since the
-                local one is a single process; traces stop at the agent&apos;s runtime, which doesn&apos;t continue them
-                yet; group re-checks can&apos;t check people whose identity provider issued no refresh token; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
-                connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; an
-                app that chooses its own thread IDs should make them random, or ask the platform for them; usage
-                per connected app counts an agent&apos;s requests only when it is clear which app they serve; during a
-                move, the running-agents limit is checked against the old team for a start already under way; each
-                open delta stream keeps a copy of the view, and open streams per person aren&apos;t limited; and
-                conversation paging needs the agent&apos;s runtime to be v0.3.
+                <Strong>Known limits:</Strong> a custom agent is built into the runtime image for the whole
+                installation, since teams can&apos;t upload code; budgets hold for triggered runs only, and a
+                run&apos;s cost counts all of its agent&apos;s usage while it ran; webhook senders must sign the
+                platform&apos;s way, or go through a relay that re-signs; tool approvals are one decision per call;
+                the MCP identity token trusts the runtime to say which of its own agent&apos;s threads a call belongs
+                to; several replicas need the Kubernetes or Agent Sandbox launcher, since the local one is a single
+                process; traces stop at the agent&apos;s runtime, which doesn&apos;t continue them yet; group
+                re-checks can&apos;t check people whose identity provider issued no refresh token; a schema per agent
+                suits thousands of agents, not millions; agents share the database server&apos;s connections and
+                CPU, which is acceptable for code the operator deploys, not for uploaded code; an app that chooses its
+                own thread IDs should make them random, or ask the platform for them; and usage per connected app
+                counts an agent&apos;s requests only when it is clear which app they serve.
               </p>
             </div>
             <p className="mt-6 text-brand-muted">
