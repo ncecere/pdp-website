@@ -78,7 +78,7 @@ export function SiteFooter() {
             {site.releaseDate ? (
               <>
                 {" "}
-                (<time dateTime={site.releaseDate}>{releaseDay}</time>): apps at scale
+                (<time dateTime={site.releaseDate}>{releaseDay}</time>): agents that run on their own
               </>
             ) : (
               "."

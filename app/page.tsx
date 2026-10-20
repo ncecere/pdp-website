@@ -128,7 +128,7 @@ function Hero() {
             className="inline-flex max-w-full items-center gap-2 rounded-full border border-brand-border-emphasis bg-brand-surface px-3 py-1 text-xs font-medium text-brand-muted hover:text-brand-text"
           >
             <span className="shrink-0 rounded-full bg-brand-primary-subtle px-2 py-0.5 text-brand-primary-subtle-text">{site.version}</span>
-            <span className="truncate">Apps at scale · Open source, MIT</span>
+            <span className="truncate">Agents that run on their own · Open source, MIT</span>
             <ArrowRight className="size-3.5 shrink-0" />
           </a>
           <p className="mt-6 text-base font-semibold text-brand-text">{site.name}</p>
