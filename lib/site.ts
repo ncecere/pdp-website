@@ -1,5 +1,5 @@
 const repoUrl = "https://github.com/ncecere/pi-durable-platform";
-const version = "v0.1.2";
+const version = "v0.2.0";
 // Links into the repository are pinned at the release tag, so they keep
 // showing the files of the version this page describes. Move them (with
 // `version`, `releaseDate` and the images below) when the page describes a
@@ -17,13 +17,12 @@ export const site = {
     "Pi Durable Platform (PDP) is a self-hosted, open-source console and API where a company's teams deploy, test and manage durable AI agents built with Pi's durable package, from a reviewed template catalog, with their own models and MCP servers, usage reports and audit.",
   docsUrl: "https://docs.pdp.bitop.dev",
   repoUrl,
-  // The version this page describes: a fix release on top of v0.1.1 and
-  // the first release, v0.1.0.
+  // The version this page describes: v0.2.0, "Run it anywhere, safely".
   version,
   // The release day of `version` (the footer and the sitemap show it).
-  releaseDate: "2026-10-19" as string | null,
+  releaseDate: "2026-10-20" as string | null,
   // The GitHub Release of `version` (made by the repository's image workflow
-  // from docs/releases/v0.1.2.md).
+  // from docs/releases/v0.2.0.md).
   releaseNotesUrl: `${repoUrl}/releases/tag/${version}`,
   releasesUrl: `${repoUrl}/releases`,
   // The roadmap is a living document (an order of work, not a schedule), so
@@ -39,8 +38,8 @@ export const site = {
     platform: "ghcr.io/ncecere/pi-durable-platform",
     runtime: "ghcr.io/ncecere/pi-durable-platform-runtime",
     // "sha256:…" of each multi-arch index, from the release notes.
-    platformDigest: "sha256:c20916ab720cc5353e17d8ad5d7c12a50fd637b9cbedc1e453f1a99ca6db6deb" as string | null,
-    runtimeDigest: "sha256:7b61a2af7b1c4aafec78ec0c5af4e9ae8e6978c1bfd375d9fea9f0b52e32c983" as string | null,
+    platformDigest: "sha256:3f988afa89eadec2b4f38b132cc34016300e10d11e7c08c0258a6546b195222d" as string | null,
+    runtimeDigest: "sha256:11a098887c13377c985dae169d7dbbaedc854717b1d277e3cdf5aec45602ce8e" as string | null,
     certificateIdentity: `${repoUrl}/.github/workflows/image.yml@refs/tags/${version}`,
     oidcIssuer: "https://token.actions.githubusercontent.com",
   },
@@ -52,6 +51,8 @@ export const site = {
     oci: "oci://ghcr.io/ncecere/charts/pi-durable-platform",
     image: "ghcr.io/ncecere/charts/pi-durable-platform",
     version: version.replace(/^v/, ""),
+    // "sha256:…" of the chart at that version, from the release notes.
+    digest: "sha256:328a90a22c2d2a82a1e74a7b9667f3fa4bfe5d8ddd8a950967f7596b1a106cb8" as string | null,
     certificateIdentity: `${repoUrl}/.github/workflows/chart.yml@refs/tags/${version}`,
   },
   deployUrl: `${tree}/deploy/README.md`,

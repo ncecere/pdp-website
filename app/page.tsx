@@ -36,7 +36,8 @@ import { imageRef, site } from "@/lib/site";
  * migrations/, runtime/ (src and test), internal/agenthost/launcher,
  * internal/authz, internal/serviceaccounts and the screen names in web/src
  * (router.tsx, components/layout/nav.tsx, lib/tabs.ts, pages/connect).
- * The v0.2 branch adds what v0.2 built (the product's `main`): deploy/README.md,
+ * v0.2.0 (docs/releases/v0.2.0.md: What changed, Upgrading, Known limitations,
+ * Images and chart) adds what v0.2 built: deploy/README.md,
  * deploy/helm/pi-durable-platform/README.md and deploy/kustomize/README.md
  * (the Helm chart, Kustomize base and overlays, RBAC, NetworkPolicies, the
  * kind smoke test, the signed chart), `rekey` and `doctor` (internal/rekey,
@@ -106,7 +107,7 @@ function Hero() {
             className="inline-flex max-w-full items-center gap-2 rounded-full border border-brand-border-emphasis bg-brand-surface px-3 py-1 text-xs font-medium text-brand-muted hover:text-brand-text"
           >
             <span className="shrink-0 rounded-full bg-brand-primary-subtle px-2 py-0.5 text-brand-primary-subtle-text">{site.version}</span>
-            <span className="truncate">Fix release · Open source, MIT</span>
+            <span className="truncate">Run it anywhere, safely · Open source, MIT</span>
             <ArrowRight className="size-3.5 shrink-0" />
           </a>
           <p className="mt-6 text-base font-semibold text-brand-text">{site.name}</p>
@@ -752,16 +753,17 @@ make run                       # http://localhost:8098`;
 const digestOrPlaceholder = (d: string | null) => d ?? "sha256:<digest from the release notes>";
 const helmInstall = `# values.yaml: appUrl, oidc, ingress and networkPolicy (your API server's
 # address and your PostgreSQL pods). Secrets are created beforehand.
-helm install pi-durable-platform ${site.chart.oci} \
-  --version ${site.chart.version} -n pi-durable-platform -f values.yaml \
-  --set images.platform.digest=${digestOrPlaceholder(site.images.platformDigest)} \
+helm install pi-durable-platform ${site.chart.oci} \\
+  --version ${site.chart.version} -n pi-durable-platform -f values.yaml \\
+  --set images.platform.digest=${digestOrPlaceholder(site.images.platformDigest)} \\
   --set images.runtime.digest=${digestOrPlaceholder(site.images.runtimeDigest)}
 
-# Verify the chart's signature (cosign v3.0 or newer; keyless)
-cosign verify ${site.chart.image}:${site.chart.version} \
-  --certificate-identity \
-    ${site.chart.certificateIdentity} \
-  --certificate-oidc-issuer \
+# Verify the chart's signature (cosign v3.0 or newer; keyless)${site.chart.digest ? `
+# Chart ${site.chart.version} is ${site.chart.digest}` : ""}
+cosign verify ${site.chart.image}:${site.chart.version} \\
+  --certificate-identity \\
+    ${site.chart.certificateIdentity} \\
+  --certificate-oidc-issuer \\
     ${site.images.oidcIssuer}`;
 
 // .env.example and DESIGN.md "Launchers"; internal/config/validate.go.
@@ -984,17 +986,19 @@ function OpenSource() {
               <Eyebrow>Project status</Eyebrow>
             </div>
             <h3 id="status-title" className="mt-3 text-2xl font-semibold tracking-tight text-brand-text">
-              v0.2, run it anywhere, safely
+              {site.version}, run it anywhere, safely
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                v0.2 adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, several
+                {site.version} adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, several
                 platform replicas, Prometheus metrics with a Grafana dashboard and OpenTelemetry traces, a{" "}
                 <code>rekey</code> command to rotate the encryption key, a complete configuration reference, thread IDs
                 the platform chooses, re-checking identity provider groups while people are signed in (the provider
                 must issue refresh tokens), and a hardened agents database (each agent&apos;s owner is recorded in its
                 own schema, and orphaned roles can be dropped). It builds on v0.1.2 and adds one database migration,
-                with new settings listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
+                with new settings listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>. It also
+                fixes what an independent review of the release found, and updates a network library for four HTTP/2
+                advisories that affect v0.1.2 and earlier.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
@@ -1032,8 +1036,8 @@ function OpenSource() {
               </ul>
               <p>
                 <Strong>Known limits:</Strong> several replicas need the Kubernetes or Agent Sandbox launcher, since the
-                local one is a single process; traces stop at the platform, because the agent&apos;s runtime doesn&apos;t
-                continue them yet; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
+                local one is a single process; traces stop at the agent&apos;s runtime, which doesn&apos;t continue them
+                yet; group re-checks can&apos;t check people whose identity provider issued no refresh token; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
                 connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; and an
                 app that chooses its own thread IDs should make them random, or ask the platform for them.
               </p>
