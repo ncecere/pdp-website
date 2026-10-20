@@ -20,7 +20,7 @@ export const site = {
   // The version this page describes: v0.2.0, "Run it anywhere, safely".
   version,
   // The release day of `version` (the footer and the sitemap show it).
-  releaseDate: "2026-10-20" as string | null,
+  releaseDate: "2026-10-19" as string | null,
   // The GitHub Release of `version` (made by the repository's image workflow
   // from docs/releases/v0.2.0.md).
   releaseNotesUrl: `${repoUrl}/releases/tag/${version}`,
