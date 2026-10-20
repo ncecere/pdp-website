@@ -50,17 +50,19 @@ import { imageRef, site } from "@/lib/site";
  * "Observability" (metrics, labels, OTLP/HTTP traces; deploy/README.md
  * "Monitoring", deploy/grafana/), and the chart's values (internal/config,
  * deploy/helm/pi-durable-platform).
- * v0.3 ("Apps at scale", built on the product's feat/v03-oauth, not released
- * yet) is checked against DESIGN.md "Threads" (paging and search, incremental
+ * v0.3.0 ("Apps at scale", 2026-10-20; docs/releases/v0.3.0.md: What changed,
+ * Fixed and hardened, Upgrading, Known limitations, Images and chart) is
+ * checked against DESIGN.md "Threads" (paging and search, incremental
  * event streams, steering), "Creating and moving agents" and
  * docs/agent-keys-and-moves.md, "OAuth Connect" (scopes, prompt=none,
  * login_hint, app secrets, the app event stream, usage per app), "Models ›
  * Usage" (several agents, agent by day), "MCP servers" (app-only tools),
  * api/openapi.yaml and web/src (test-chat.tsx, move-agent.tsx,
  * app-secrets-section.tsx, admin/usage/app-filter.tsx, team/usage).
- * Planned work in the status card: docs/roadmap.md (revised 2026-10-19: its
- * phases v0.2 to v0.6 and Later, each item an issue labelled `roadmap`; v0.5
- * gained MCP Apps, #51).
+ * Planned work in the status card: docs/roadmap.md (revised 2026-10-20: its
+ * phases v0.4 to v0.6 and Later, each item an issue labelled `roadmap`; v0.4
+ * gained the person behind an MCP call, #57, and v0.5 MCP Apps, #51, and
+ * memory as an MCP server, #36).
  * Keep it that way: nothing on this page may describe a feature that isn't
  * built. Planned work is named as planned, in the project status card.
  */
@@ -116,7 +118,7 @@ function Hero() {
             className="inline-flex max-w-full items-center gap-2 rounded-full border border-brand-border-emphasis bg-brand-surface px-3 py-1 text-xs font-medium text-brand-muted hover:text-brand-text"
           >
             <span className="shrink-0 rounded-full bg-brand-primary-subtle px-2 py-0.5 text-brand-primary-subtle-text">{site.version}</span>
-            <span className="truncate">Run it anywhere, safely · Open source, MIT</span>
+            <span className="truncate">Apps at scale · Open source, MIT</span>
             <ArrowRight className="size-3.5 shrink-0" />
           </a>
           <p className="mt-6 text-base font-semibold text-brand-text">{site.name}</p>
@@ -463,12 +465,14 @@ function Features() {
                 expire, and up to two active keys so they rotate without downtime.
               </>,
               <>
-                <Strong>Service-managed agents:</Strong> an app creates one per user by key in a shared team. Only the
-                team&apos;s service accounts talk to them; owners and admins see and delete them, never read them.
+                <Strong>Service-managed agents:</Strong> an app creates one per user by key in a shared team, and the
+                database makes sure such an agent is always service-managed. Only the team&apos;s service accounts talk
+                to them; owners and admins see and delete them, never read them.
               </>,
               <>
                 <Strong>Move an agent</Strong> with its conversations to another team or a personal workspace. A dry run
-                shows first who gains and loses access, and what the target team lacks.
+                shows first who gains and loses access, and what the target team lacks. The agent always starts with its
+                new team&apos;s settings: a request already under way can&apos;t bring back the old team&apos;s.
               </>,
               <>
                 <Strong>Groups are re-checked:</Strong> remove someone from the allowed group and, within a check
@@ -538,7 +542,8 @@ function Features() {
                 MCP servers its user enabled, on hosts the operator allows. The platform keeps their headers.
               </>,
               <>
-                Tools an MCP App keeps for its own interface are never offered to the model.
+                Tools an MCP App keeps for its own interface are never offered to the model. Tool lists stored before
+                v0.3 are read again when the platform starts.
               </>,
             ]}
           />
@@ -579,7 +584,8 @@ function Features() {
               </>,
               <>
                 <Strong>Steer a reply:</Strong> a message sent while the agent works can join the reply in progress
-                instead of waiting for it.
+                instead of waiting for it. In the console&apos;s test chat, Enter queues a follow-up and Steer joins
+                the reply.
               </>,
               <>Listing threads doesn&apos;t wake the agent; one event stream covers every agent a caller may use.</>,
             ]}
@@ -706,7 +712,8 @@ function ForApps() {
                 </>,
                 <>
                   <code>prompt=none</code> reconnects silently, and <code>login_hint</code> names the account the app
-                  expects: the platform never connects another one.
+                  expects: the platform never connects another one, and never tells an app the person hasn&apos;t
+                  connected which account is signed in.
                 </>,
                 <>
                   An app can keep one agent per purpose in the person&apos;s personal workspace with the same{" "}
@@ -714,7 +721,9 @@ function ForApps() {
                 </>,
                 <>
                   A trusted app, with a secret from a platform admin, follows everyone who connected it on one event
-                  stream and reads their usage by person, named by a pseudonymous ID for that app.
+                  stream and reads their usage by person, named only by a pseudonymous ID for that app. People who
+                  haven&apos;t connected it, and service accounts, appear without one. Taking the app off the trusted
+                  list deletes its secrets.
                 </>,
                 <>
                   Refresh tokens rotate on every use; a stolen one, used again, ends the whole connection. People
@@ -1026,32 +1035,28 @@ function OpenSource() {
               <Eyebrow>Project status</Eyebrow>
             </div>
             <h3 id="status-title" className="mt-3 text-2xl font-semibold tracking-tight text-brand-text">
-              {site.version}, run it anywhere, safely
+              {site.version}, apps at scale
             </h3>
             <div className="mt-4 space-y-3 leading-relaxed text-brand-muted">
               <p>
-                {site.version} adds a Helm chart and Kustomize base with the RBAC and NetworkPolicies agents need, several
-                platform replicas, Prometheus metrics with a Grafana dashboard and OpenTelemetry traces, a{" "}
-                <code>rekey</code> command to rotate the encryption key, a complete configuration reference, thread IDs
-                the platform chooses, re-checking identity provider groups while people are signed in (the provider
-                must issue refresh tokens), and a hardened agents database (each agent&apos;s owner is recorded in its
-                own schema, and orphaned roles can be dropped). It builds on v0.1.2 and adds one database migration,
-                with new settings listed in <TextLink href={site.envExampleUrl}>.env.example</TextLink>. It also
-                fixes what an independent review of the release found, and updates a network library for four HTTP/2
-                advisories that affect v0.1.2 and earlier.
+                {site.version} is for apps built on the platform: paging and title search for threads and
+                conversations, event streams that send only what changed, steering a reply, safe retries when creating
+                agents and agents by key in personal workspaces, moving an agent with its conversations to another
+                team, OAuth Connect for apps with many people (silent reconnects, the expected account, a read-only
+                scope, and one event stream and usage report for a trusted app), and usage for several agents at once.
+                It builds on v0.2.0, adds three database migrations and no new settings. It also fixes what an
+                independent review of the release found.
+              </p>
+              <p>
+                v0.2.0, the release before, brought the Helm chart and Kustomize base, several platform replicas,
+                metrics and traces, the <code>rekey</code> command and group re-checks; its settings are in{" "}
+                <TextLink href={site.envExampleUrl}>.env.example</TextLink>.
               </p>
               <p>
                 Everything on this page is built and tested, but it is before 1.0 and hasn&apos;t run in production
                 beyond its maintainer&apos;s own installation: expect changes between releases, and read the release
                 notes before you upgrade. The durable package is experimental itself, so the runtime pins one version
                 of it and its conformance suite guards every upgrade.
-              </p>
-              <p>
-                <Strong>Done for v0.3, apps at scale</Strong>, the next release: paging and title search for threads and
-                conversations, event streams that send only what changed, steering a reply, safe retries when creating
-                agents and agents by key in personal workspaces, moving an agent with its conversations to another
-                team, OAuth Connect for apps with many people (silent reconnects, the expected account, a read-only
-                scope, and one event stream and usage report for a trusted app), and usage for several agents at once.
               </p>
               <p>
                 <Strong>Planned, not built yet</Strong>, in the order of the{" "}
@@ -1061,12 +1066,12 @@ function OpenSource() {
                 <li>
                   <Strong>v0.4, agents that run on their own:</Strong> the runtime as a library, so teams can build
                   agents with their own state, hooks and tasks; schedules and webhooks that wake agents; hibernation
-                  that knows about background work; a triage agent and a deep-research agent; and approving tool
-                  calls.
+                  that knows about background work; a triage agent and a deep-research agent; telling MCP servers, with
+                  a signed identity, the person behind a tool call; and approving tool calls.
                 </li>
                 <li>
-                  <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, an assistant
-                  with memory, enforcing monthly cost budgets (recorded today), limits for shared teams, showing MCP
+                  <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, memory for
+                  assistants (an MCP server that remembers for each person), enforcing monthly cost budgets (recorded today), limits for shared teams, showing MCP
                   servers&apos; app interfaces in the console and in apps, and agent runtimes that platform admins
                   register.
                 </li>
@@ -1083,8 +1088,11 @@ function OpenSource() {
                 local one is a single process; traces stop at the agent&apos;s runtime, which doesn&apos;t continue them
                 yet; group re-checks can&apos;t check people whose identity provider issued no refresh token; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
                 connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; an
-                app that chooses its own thread IDs should make them random, or ask the platform for them; and usage
-                per connected app counts an agent&apos;s requests only when it is clear which app they serve.
+                app that chooses its own thread IDs should make them random, or ask the platform for them; usage
+                per connected app counts an agent&apos;s requests only when it is clear which app they serve; during a
+                move, the running-agents limit is checked against the old team for a start already under way; each
+                open delta stream keeps a copy of the view, and open streams per person aren&apos;t limited; and
+                conversation paging needs the agent&apos;s runtime to be v0.3.
               </p>
             </div>
             <p className="mt-6 text-brand-muted">
