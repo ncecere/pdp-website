@@ -44,6 +44,19 @@ export const site = {
     certificateIdentity: `${repoUrl}/.github/workflows/image.yml@refs/tags/${version}`,
     oidcIssuer: "https://token.actions.githubusercontent.com",
   },
+  // The Helm chart (deploy/helm/pi-durable-platform), published and signed by
+  // the repository's chart workflow for each release tag: its version is the
+  // release's without the "v". The Kustomize base and overlays are in
+  // deploy/kustomize. The install pages are in the docs.
+  chart: {
+    oci: "oci://ghcr.io/ncecere/charts/pi-durable-platform",
+    image: "ghcr.io/ncecere/charts/pi-durable-platform",
+    version: version.replace(/^v/, ""),
+    certificateIdentity: `${repoUrl}/.github/workflows/chart.yml@refs/tags/${version}`,
+  },
+  deployUrl: `${tree}/deploy/README.md`,
+  installDocsUrl: "https://docs.pdp.bitop.dev/docs/operate/kubernetes",
+  kustomizeDocsUrl: "https://docs.pdp.bitop.dev/docs/operate/kustomize",
   licenseUrl: `${tree}/LICENSE`,
   securityUrl: `${repoUrl}/security`,
   readmeUrl: `${tree}/README.md`,
