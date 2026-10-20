@@ -50,8 +50,17 @@ import { imageRef, site } from "@/lib/site";
  * "Observability" (metrics, labels, OTLP/HTTP traces; deploy/README.md
  * "Monitoring", deploy/grafana/), and the chart's values (internal/config,
  * deploy/helm/pi-durable-platform).
+ * v0.3 ("Apps at scale", built on the product's feat/v03-oauth, not released
+ * yet) is checked against DESIGN.md "Threads" (paging and search, incremental
+ * event streams, steering), "Creating and moving agents" and
+ * docs/agent-keys-and-moves.md, "OAuth Connect" (scopes, prompt=none,
+ * login_hint, app secrets, the app event stream, usage per app), "Models ›
+ * Usage" (several agents, agent by day), "MCP servers" (app-only tools),
+ * api/openapi.yaml and web/src (test-chat.tsx, move-agent.tsx,
+ * app-secrets-section.tsx, admin/usage/app-filter.tsx, team/usage).
  * Planned work in the status card: docs/roadmap.md (revised 2026-10-19: its
- * phases v0.2 to v0.6 and Later, each item an issue labelled `roadmap`).
+ * phases v0.2 to v0.6 and Later, each item an issue labelled `roadmap`; v0.5
+ * gained MCP Apps, #51).
  * Keep it that way: nothing on this page may describe a feature that isn't
  * built. Planned work is named as planned, in the project status card.
  */
@@ -454,8 +463,12 @@ function Features() {
                 expire, and up to two active keys so they rotate without downtime.
               </>,
               <>
-                <Strong>Service-managed agents:</Strong> an app creates one per user by key. Only the team&apos;s service
-                accounts talk to them; owners and admins see and delete them, never read them.
+                <Strong>Service-managed agents:</Strong> an app creates one per user by key in a shared team. Only the
+                team&apos;s service accounts talk to them; owners and admins see and delete them, never read them.
+              </>,
+              <>
+                <Strong>Move an agent</Strong> with its conversations to another team or a personal workspace. A dry run
+                shows first who gains and loses access, and what the target team lacks.
               </>,
               <>
                 <Strong>Groups are re-checked:</Strong> remove someone from the allowed group and, within a check
@@ -524,6 +537,9 @@ function Features() {
                 <Strong>Apps&apos; own servers,</Strong> where a template allows it: a chat app can give one thread the
                 MCP servers its user enabled, on hosts the operator allows. The platform keeps their headers.
               </>,
+              <>
+                Tools an MCP App keeps for its own interface are never offered to the model.
+              </>,
             ]}
           />
 
@@ -556,6 +572,15 @@ function Features() {
                 <Strong>IDs nobody can guess:</Strong> an app asks the platform to start a thread and gets a random ID,
                 and an app&apos;s own MCP servers attach only to a thread whose creator is known.
               </>,
+              <>
+                <Strong>Built for long conversations:</Strong> thread lists page and search by title, a conversation
+                loads page by page, and its event stream can send only what changed: what it sends follows the new
+                text, not the conversation&apos;s length.
+              </>,
+              <>
+                <Strong>Steer a reply:</Strong> a message sent while the agent works can join the reply in progress
+                instead of waiting for it.
+              </>,
               <>Listing threads doesn&apos;t wake the agent; one event stream covers every agent a caller may use.</>,
             ]}
           />
@@ -575,7 +600,8 @@ function Features() {
             bullets={[
               <>
                 <Strong>Usage reports</Strong> for each team and for the platform: requests and tokens per day, model,
-                agent or team, with a cost estimate from the models&apos; prices.
+                agent, agent by day or team, with a cost estimate from the models&apos; prices. An app reads several
+                agents&apos; usage in one call, and platform admins filter by the connected app it came through.
               </>,
               <>
                 <Strong>An append-only audit log,</Strong> written in the same transaction as each change, for the
@@ -629,8 +655,9 @@ function ForApps() {
           <p>
             The console&apos;s chat is for testing. People use agents through your apps, and your apps call the
             platform API.
-            It is described in OpenAPI; replies stream as server-sent events, and a <code>requestId</code> makes a
-            retried message safe.
+            It is described in OpenAPI; replies stream as server-sent events, whole views or only the changes. A{" "}
+            <code>requestId</code> makes a retried message safe, and an <code>Idempotency-Key</code> a retried agent
+            creation.
           </p>
         </SectionHeading>
         <div className="mt-12 grid items-start gap-8 lg:grid-cols-2">
@@ -674,7 +701,20 @@ function ForApps() {
                 </>,
                 <>
                   The app&apos;s token reaches the person&apos;s personal workspace and their teams&apos; agents, without
-                  their platform role: an app acting for an admin gets no admin powers.
+                  their platform role: an app acting for an admin gets no admin powers. With the{" "}
+                  <code>agents:read</code> scope it only reads.
+                </>,
+                <>
+                  <code>prompt=none</code> reconnects silently, and <code>login_hint</code> names the account the app
+                  expects: the platform never connects another one.
+                </>,
+                <>
+                  An app can keep one agent per purpose in the person&apos;s personal workspace with the same{" "}
+                  <code>PUT …/agents/by-key/…</code>; the agent is the person&apos;s.
+                </>,
+                <>
+                  A trusted app, with a secret from a platform admin, follows everyone who connected it on one event
+                  stream and reads their usage by person, named by a pseudonymous ID for that app.
                 </>,
                 <>
                   Refresh tokens rotate on every use; a stolen one, used again, ends the whole connection. People
@@ -1007,14 +1047,17 @@ function OpenSource() {
                 of it and its conformance suite guards every upgrade.
               </p>
               <p>
+                <Strong>Done for v0.3, apps at scale</Strong>, the next release: paging and title search for threads and
+                conversations, event streams that send only what changed, steering a reply, safe retries when creating
+                agents and agents by key in personal workspaces, moving an agent with its conversations to another
+                team, OAuth Connect for apps with many people (silent reconnects, the expected account, a read-only
+                scope, and one event stream and usage report for a trusted app), and usage for several agents at once.
+              </p>
+              <p>
                 <Strong>Planned, not built yet</Strong>, in the order of the{" "}
                 <TextLink href={site.roadmapUrl}>roadmap</TextLink>:
               </p>
               <ul className="list-disc space-y-1.5 pl-5 text-sm marker:text-brand-subtle">
-                <li>
-                  <Strong>v0.3, apps at scale:</Strong> paging, incremental event streams, steering a reply, and OAuth
-                  Connect for apps with many people.
-                </li>
                 <li>
                   <Strong>v0.4, agents that run on their own:</Strong> the runtime as a library, so teams can build
                   agents with their own state, hooks and tasks; schedules and webhooks that wake agents; hibernation
@@ -1023,8 +1066,9 @@ function OpenSource() {
                 </li>
                 <li>
                   <Strong>v0.5, files, memory and limits:</Strong> files and images on object storage, an assistant
-                  with memory, enforcing monthly cost budgets (recorded today), limits for shared teams, and agent
-                  runtimes that platform admins register.
+                  with memory, enforcing monthly cost budgets (recorded today), limits for shared teams, showing MCP
+                  servers&apos; app interfaces in the console and in apps, and agent runtimes that platform admins
+                  register.
                 </li>
                 <li>
                   <Strong>v0.6, coding agents:</Strong> workspaces with files and a shell.
@@ -1038,8 +1082,9 @@ function OpenSource() {
                 <Strong>Known limits:</Strong> several replicas need the Kubernetes or Agent Sandbox launcher, since the
                 local one is a single process; traces stop at the agent&apos;s runtime, which doesn&apos;t continue them
                 yet; group re-checks can&apos;t check people whose identity provider issued no refresh token; a schema per agent suits thousands of agents, not millions; agents share the database server&apos;s
-                connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; and an
-                app that chooses its own thread IDs should make them random, or ask the platform for them.
+                connections and CPU, which is acceptable for templates the platform runs, not for uploaded code; an
+                app that chooses its own thread IDs should make them random, or ask the platform for them; and usage
+                per connected app counts an agent&apos;s requests only when it is clear which app they serve.
               </p>
             </div>
             <p className="mt-6 text-brand-muted">
